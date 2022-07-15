@@ -40,6 +40,7 @@ import type { Task, DagRun } from 'src/types';
 import RunAction from './taskActions/Run';
 import ClearAction from './taskActions/Clear';
 import MarkFailedAction from './taskActions/MarkFailed';
+import MarkAbortedAction from './taskActions/MarkAborted';
 import MarkSuccessAction from './taskActions/MarkSuccess';
 import ExtraLinks from './ExtraLinks';
 import Logs from './Logs';
@@ -168,6 +169,12 @@ const TaskInstance = ({ taskId, runId }: Props) => {
                       mapIndexes={selectedRows}
                     />
                     <MarkFailedAction
+                      runId={runId}
+                      taskId={taskId}
+                      dagId={dagId}
+                      mapIndexes={selectedRows}
+                    />
+                    <MarkAbortedAction
                       runId={runId}
                       taskId={taskId}
                       dagId={dagId}

@@ -29,6 +29,7 @@ import useMarkSuccessRun from './useMarkSuccessRun';
 import useRunTask from './useRunTask';
 import useClearTask from './useClearTask';
 import useMarkFailedTask from './useMarkFailedTask';
+import useMarkAbortedTask from './useMarkAbortedTask';
 import useMarkSuccessTask from './useMarkSuccessTask';
 import useExtraLinks from './useExtraLinks';
 import useConfirmMarkTask from './useConfirmMarkTask';

@@ -2621,6 +2621,45 @@ class Airflow(AirflowBaseView):
             state=TaskInstanceState.FAILED,
         )
 
+    @expose('/failed', methods=['POST'])
+    @auth.has_access(
+        [
+            (permissions.ACTION_CAN_EDIT, permissions.RESOURCE_DAG),
+            (permissions.ACTION_CAN_EDIT, permissions.RESOURCE_TASK_INSTANCE),
+        ]
+    )
+    @action_logging
+    def aborted(self):
+        """Mark task as aborted."""
+        args = request.form
+        dag_id = args.get('dag_id')
+        task_id = args.get('task_id')
+        run_id = args.get('dag_run_id')
+
+        if 'map_index' not in args:
+            map_indexes: Optional[List[int]] = None
+        else:
+            map_indexes = args.getlist('map_index', type=int)
+
+        origin = get_safe_url(args.get('origin'))
+        upstream = to_boolean(args.get('upstream'))
+        downstream = to_boolean(args.get('downstream'))
+        future = to_boolean(args.get('future'))
+        past = to_boolean(args.get('past'))
+
+        return self._mark_task_instance_state(
+            dag_id=dag_id,
+            run_id=run_id,
+            task_id=task_id,
+            map_indexes=map_indexes,
+            origin=origin,
+            upstream=upstream,
+            downstream=downstream,
+            future=future,
+            past=past,
+            state=TaskInstanceState.ABORTED,
+        )
+
     @expose('/success', methods=['POST'])
     @auth.has_access(
         [

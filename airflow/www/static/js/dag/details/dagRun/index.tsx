@@ -38,6 +38,7 @@ import { formatDuration, getDuration } from 'src/datetime_utils';
 import Time from 'src/components/Time';
 
 import MarkFailedRun from './MarkFailedRun';
+import MarkAbortedRun from './MarkAbortedRun';
 import MarkSuccessRun from './MarkSuccessRun';
 import QueueRun from './QueueRun';
 import ClearRun from './ClearRun';
@@ -81,6 +82,7 @@ const DagRun = ({ runId }: Props) => {
           Graph
         </Button>
         <MarkFailedRun dagId={dagId} runId={runId} />
+        <MarkAbortedRun dagId={dagId} runId={runId} />
         <MarkSuccessRun dagId={dagId} runId={runId} />
       </Flex>
       <Divider my={3} />

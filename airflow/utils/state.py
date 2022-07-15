@@ -157,6 +157,7 @@ class State:
         [
             TaskInstanceState.SUCCESS,
             TaskInstanceState.FAILED,
+            TaskInstanceState.ABORTED,
             TaskInstanceState.SKIPPED,
             TaskInstanceState.UPSTREAM_FAILED,
             TaskInstanceState.REMOVED,

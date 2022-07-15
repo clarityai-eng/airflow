@@ -52,6 +52,7 @@ export {
   useMarkSuccessRun,
   useRunTask,
   useClearTask,
+  useMarkAbortedTask,
   useMarkFailedTask,
   useMarkSuccessTask,
   useExtraLinks,

@@ -47,6 +47,7 @@
   <meta name="paused_url" content="{{ url_for('Airflow.paused') }}">
   <meta name="dagrun_clear_url" content="{{ url_for('Airflow.dagrun_clear') }}">
   <meta name="dagrun_failed_url" content="{{ url_for('Airflow.dagrun_failed') }}">
+  <meta name="dagrun_aborted_url" content="{{ url_for('Airflow.dagrun_aborted') }}">
   <meta name="dagrun_success_url" content="{{ url_for('Airflow.dagrun_success') }}">
   <meta name="dagrun_queued_url" content="{{ url_for('Airflow.dagrun_queued') }}">
   <meta name="clear_url" content="{{ url_for('Airflow.clear') }}">
@@ -379,6 +380,40 @@
               <span class="col-xs-12 col-sm-3 task-instance-modal-column">
                 <button type="submit" id="btn_failed" class="btn btn-primary btn-block">
                   Mark Failed
+                </button>
+              </span>
+            </div>
+            <hr style="margin-bottom: 8px;">
+          </form>
+          <form method="GET" data-action="{{ url_for('Airflow.confirm') }}" id="aborted_action">
+            <input type="hidden" name="dag_id" value="{{ dag.dag_id }}">
+            <input type="hidden" name="task_id">
+            <input type="hidden" name="dag_run_id">
+            <input type="hidden" name="map_index">
+            <input type="hidden" name="origin" value="{{ request.base_url }}">
+            <input type="hidden" name="state" value="aborted">
+            <div class="row">
+              <span class="btn-group col-xs-12 col-sm-9 task-instance-modal-column" data-toggle="buttons">
+                <label class="btn btn-default">
+                  <input type="checkbox" value="true" name="past" autocomplete="off">
+                  Past
+                </label>
+                <label class="btn btn-default">
+                  <input type="checkbox" value="true" name="future" autocomplete="off">
+                  Future
+                </label>
+                <label class="btn btn-default">
+                  <input type="checkbox" value="true" name="upstream" autocomplete="off">
+                  Upstream
+                </label>
+                <label class="btn btn-default">
+                  <input type="checkbox" value="true" name="downstream" autocomplete="off">
+                  Downstream
+                </label>
+              </span>
+              <span class="col-xs-12 col-sm-3 task-instance-modal-column">
+                <button type="submit" id="btn_aborted" class="btn btn-primary">
+                  Mark Aborted
                 </button>
               </span>
             </div>

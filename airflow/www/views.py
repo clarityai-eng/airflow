@@ -94,6 +94,7 @@ import airflow
 from airflow import models, plugins_manager, settings
 from airflow.api.common.mark_tasks import (
     set_dag_run_state_to_failed,
+    set_dag_run_state_to_aborted,
     set_dag_run_state_to_queued,
     set_dag_run_state_to_success,
     set_state,
@@ -2295,6 +2296,24 @@ class Airflow(AirflowBaseView):
 
             return htmlsafe_json_dumps(details, separators=(',', ':'))
 
+    def _mark_dagrun_state_as_aborted(self, dag_id, dag_run_id, confirmed):
+        if not dag_run_id:
+            return {'status': 'error', 'message': 'Invalid dag_run_id'}
+
+        dag = get_airflow_app().dag_bag.get_dag(dag_id)
+
+        if not dag:
+            return {'status': 'error', 'message': f'Cannot find DAG: {dag_id}'}
+
+        new_dag_state = set_dag_run_state_to_aborted(dag=dag, run_id=dag_run_id, commit=confirmed)
+
+        if confirmed:
+            return {'status': 'success', 'message': f'Marked aborted on {len(new_dag_state)} task instances'}
+        else:
+            details = [str(t) for t in new_dag_state]
+
+            return htmlsafe_json_dumps(details, separators=(',', ':'))
+
     def _mark_dagrun_state_as_success(self, dag_id, dag_run_id, confirmed):
         if not dag_run_id:
             return {'status': 'error', 'message': 'Invalid dag_run_id'}
@@ -2361,6 +2380,22 @@ class Airflow(AirflowBaseView):
         dag_run_id = request.form.get('dag_run_id')
         confirmed = request.form.get('confirmed') == 'true'
         return self._mark_dagrun_state_as_success(dag_id, dag_run_id, confirmed)
+
+    
+    @expose('/dagrun_aborted', methods=['POST'])
+    @auth.has_access(
+        [
+            (permissions.ACTION_CAN_EDIT, permissions.RESOURCE_DAG),
+            (permissions.ACTION_CAN_EDIT, permissions.RESOURCE_DAG_RUN),
+        ]
+    )
+    @action_logging
+    def dagrun_aborted(self):
+        """Mark DagRun aborted."""
+        dag_id = request.form.get('dag_id')
+        dag_run_id = request.form.get('dag_run_id')
+        confirmed = request.form.get('confirmed') == 'true'
+        return self._mark_dagrun_state_as_aborted(dag_id, dag_run_id, confirmed)
 
     @expose('/dagrun_queued', methods=['POST'])
     @auth.has_access(

@@ -17,6 +17,7 @@
 # under the License.
 
 from enum import Enum
+from tkinter.messagebox import ABORT
 from typing import Dict, FrozenSet, Tuple
 
 from airflow.settings import STATE_COLORS
@@ -51,6 +52,7 @@ class TaskInstanceState(str, Enum):
     SKIPPED = "skipped"  # Skipped by branching or some other mechanism
     SENSING = "sensing"  # Smart sensor offloaded to the sensor DAG
     DEFERRED = "deferred"  # Deferrable operator waiting on a trigger
+    ABORTED = "aborted"  # Dag has been aborted and so has the ask
 
     def __str__(self) -> str:
         return self.value
@@ -69,6 +71,7 @@ class DagRunState(str, Enum):
     RUNNING = "running"
     SUCCESS = "success"
     FAILED = "failed"
+    ABORTED = "aborted"
 
     def __str__(self) -> str:
         return self.value
@@ -99,6 +102,7 @@ class State:
     SKIPPED = TaskInstanceState.SKIPPED
     SENSING = TaskInstanceState.SENSING
     DEFERRED = TaskInstanceState.DEFERRED
+    ABORTED = TaskInstanceState.ABORTED
 
     task_states: Tuple[Optional[TaskInstanceState], ...] = (None,) + tuple(TaskInstanceState)
 
@@ -107,6 +111,7 @@ class State:
         DagRunState.SUCCESS,
         DagRunState.RUNNING,
         DagRunState.FAILED,
+        DagRunState.ABORTED
     )
 
     state_color: Dict[Optional[TaskInstanceState], str] = {

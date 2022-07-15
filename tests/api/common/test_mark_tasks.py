@@ -30,6 +30,7 @@ from airflow.api.common.mark_tasks import (
     set_dag_run_state_to_queued,
     set_dag_run_state_to_running,
     set_dag_run_state_to_success,
+    set_dag_run_state_to_aborted,
     set_state,
 )
 from airflow.models import DagRun
@@ -578,6 +579,21 @@ class TestMarkDAGRun:
         self._verify_dag_run_state(self.dag1, date, State.SUCCESS)
         self._verify_task_instance_states(self.dag1, date, State.SUCCESS)
         self._verify_dag_run_dates(self.dag1, date, State.SUCCESS, middle_time)
+
+    def test_set_running_dag_run_to_aborted(self):
+        date = self.execution_dates[0]
+        dr = self._create_test_dag_run(State.RUNNING, date)
+        middle_time = timezone.utcnow()
+        self._set_default_task_instance_states(dr)
+
+        altered = set_dag_run_state_to_aborted(dag=self.dag1, run_id=dr.run_id, commit=True)
+
+        # Only non-completed tasks should be altered.
+        expected = self._get_num_tasks_with_non_completed_state()
+        assert len(altered) == expected
+        self._verify_dag_run_state(self.dag1, date, State.ABORTED)
+        assert dr.get_task_instance('run_after_loop').state == State.ABORTED
+        self._verify_dag_run_dates(self.dag1, date, State.ABORTED, middle_time)
 
     def test_set_running_dag_run_to_failed(self):
         date = self.execution_dates[0]

@@ -413,6 +413,79 @@ def set_dag_run_state_to_success(
         task.dag = dag
     return set_state(tasks=dag.tasks, run_id=run_id, state=State.SUCCESS, commit=commit, session=session)
 
+@provide_session
+def set_dag_run_state_to_aborted(
+    *,
+    dag: DAG,
+    execution_date: Optional[datetime] = None,
+    run_id: Optional[str] = None,
+    commit: bool = False,
+    session: SASession = NEW_SESSION,
+) -> List[TaskInstance]:
+    """
+    Set the dag run for a specific execution date or run_id and its running task instances
+    to aborted.
+
+    :param dag: the DAG of which to alter state
+    :param execution_date: the execution date from which to start looking(deprecated)
+    :param run_id: the DAG run_id to start looking from
+    :param commit: commit DAG and tasks to be altered to the database
+    :param session: database session
+    :return: If commit is true, list of tasks that have been updated,
+             otherwise list of tasks that will be updated
+    :raises: AssertionError if dag or execution_date is invalid
+    """
+    if not exactly_one(execution_date, run_id):
+        return []
+    if not dag:
+        return []
+
+    if execution_date:
+        if not timezone.is_localized(execution_date):
+            raise ValueError(f"Received non-localized date {execution_date}")
+        dag_run = dag.get_dagrun(execution_date=execution_date)
+        if not dag_run:
+            raise ValueError(f'DagRun with execution_date: {execution_date} not found')
+        run_id = dag_run.run_id
+
+    if not run_id:
+        raise ValueError(f'Invalid dag_run_id: {run_id}')
+
+    # Mark the dag run to aborted.
+    if commit:
+        _set_dag_run_state(dag.dag_id, run_id, DagRunState.ABORTED, session)
+
+    # Mark only RUNNING task instances.
+    task_ids = [task.task_id for task in dag.tasks]
+    tis = session.query(TaskInstance).filter(
+        TaskInstance.dag_id == dag.dag_id,
+        TaskInstance.run_id == run_id,
+        TaskInstance.task_id.in_(task_ids),
+        TaskInstance.state.in_(State.running),
+    )
+    task_ids_of_running_tis = [task_instance.task_id for task_instance in tis]
+
+    tasks = []
+    for task in dag.tasks:
+        if task.task_id not in task_ids_of_running_tis:
+            continue
+        task.dag = dag
+        tasks.append(task)
+
+    # Mark non-finished tasks as SKIPPED.
+    tis = session.query(TaskInstance).filter(
+        TaskInstance.dag_id == dag.dag_id,
+        TaskInstance.run_id == run_id,
+        TaskInstance.state.not_in(State.finished),
+        TaskInstance.state.not_in(State.running),
+    )
+
+    tis = [ti for ti in tis]
+    if commit:
+        for ti in tis:
+            ti.set_state(State.SKIPPED)
+
+    return tis + set_state(tasks=tasks, run_id=run_id, state=State.ABORTED, commit=commit, session=session)
 
 @provide_session
 def set_dag_run_state_to_failed(

@@ -2541,8 +2541,9 @@ class Airflow(AirflowBaseView):
         if state not in (
             'success',
             'failed',
+            'aborted'
         ):
-            msg = f"Invalid state {state}, must be either 'success' or 'failed'"
+            msg = f"Invalid state {state}, must be either 'success', 'aborted' or 'failed'"
             return redirect_or_json(origin, msg, status='error', status_code=400)
 
         latest_execution_date = dag.get_latest_execution_date()
